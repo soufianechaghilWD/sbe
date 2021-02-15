@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 
 
 const usersSchema = mongoose.Schema({
-    _id: String,
+    // Add the user id cuz it's coming from the firebase Auth
+    // _id: String,
     username : String,
     email: String,
     urlPic: String,
