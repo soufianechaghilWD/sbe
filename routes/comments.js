@@ -21,7 +21,10 @@ commentsRouter.route('/')
 
 commentsRouter.route('/add/:postId')
 .put((req, res) => {
-    Posts.updateOne({"_id": req.params.postId}, {$addToSet: {"comments": [req.body.comment]}}, (err, results) => {
+    Posts.updateOne(
+        {"_id": req.params.postId},
+        {$addToSet: {"comments": [req.body.comment]}},
+        (err, results) => {
         if(err) res.status(406).send(err)
         else res.status(200).send(results)
     })

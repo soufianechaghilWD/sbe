@@ -25,7 +25,13 @@ postsRouter.route('/')
     Posts.
     find({}).
     populate('poster').
-    populate('comments').
+    populate({
+        path: "comments",
+        populate: {
+            path: "commenter",
+            model: "User"
+        }
+    }).
     exec((err, results) => {
         if(err) res.status(400).send(err)
         else res.status(200).send(results)
@@ -36,7 +42,10 @@ postsRouter.route('/')
 
 postsRouter.route('/addlike/:postId')
 .put((req, res) => {
-    Posts.updateOne({"_id": req.params.postId}, {$addToSet: {"likes": [req.body.liker]}}, (err, resu) => {
+    Posts.updateOne(
+        {"_id": req.params.postId},
+        {$addToSet: {"likes": [req.body.liker]}},
+        (err, resu) => {
         if(err) res.status(406).send(err)
         else res.status(200).send(resu)
     })

@@ -37,11 +37,17 @@ usersRouter.route('/')
 usersRouter.route('/:wantedId')
 .put((req, res) => {
     const data = req.body
-    Users.updateOne({"_id" : req.params.wantedId} , {$addToSet: { peopleFollUser : [data.asker]}} , (err, result) => {
+    Users.updateOne(
+        {"_id" : req.params.wantedId},
+        {$addToSet: { peopleFollUser : [data.asker]}},
+        (err, result) => {
         if(err){
             res.status(406).send(err)
         }else{
-            Users.updateOne({"_id": data.asker}, {$addToSet: {peopleUserFoll: [req.params.wantedId]}}, (err, results) => {
+            Users.updateOne(
+                {"_id": data.asker},
+                {$addToSet: {peopleUserFoll: [req.params.wantedId]}},
+                (err, results) => {
                 if(err) res.status(406).send(err)
                 else res.status(200).send(results)
             })
@@ -54,7 +60,10 @@ usersRouter.route('/:wantedId')
 usersRouter.route('/ask/:wantedId')
 .put((req, res) => {
 
-    Users.updateOne({"_id": req.params.wantedId}, {$addToSet: { asking : [req.body.asker]}},  (err, results) => {
+    Users.updateOne(
+        {"_id": req.params.wantedId},
+        {$addToSet: { asking : [req.body.asker]}}, 
+        (err, results) => {
         if (err) res.status(406).send(err)
         else res.status(200).send(results)
     })
@@ -67,17 +76,26 @@ usersRouter.route('/accept/:wantedId')
 .put((req, res) => {
 
     // Add the asker to list of people following the user
-    Users.updateOne({"_id": req.params.wantedId}, {$addToSet: { peopleFollUser : [req.body.asker]}}, (err, results) => {
+    Users.updateOne(
+        {"_id": req.params.wantedId},
+        {$addToSet: { peopleFollUser : [req.body.asker]}},
+        (err, results) => {
         if(err) res.status(406).send(err)
         else{
 
             // Add the Receiver to list of people the asker follow
-            Users.updateOne({"_id": req.body.asker}, {$addToSet: {peopleUserFoll: [req.params.wantedId]}}, (err, resul) => {
+            Users.updateOne(
+                {"_id": req.body.asker},
+                {$addToSet: {peopleUserFoll: [req.params.wantedId]}},
+                (err, resul) => {
                 if(err) res.status(406).send(err)
                 else {
                     
                     // Remove the asker from list of asking
-                    Users.updateOne({ '_id' : req.params.wantedId}, {$pull: {"asking": req.body.asker}}, (err, resull) => {
+                    Users.updateOne(
+                        { '_id' : req.params.wantedId},
+                        {$pull: {"asking": req.body.asker}},
+                        (err, resull) => {
                         if(err) {
                             res.status(406).send(err)
                         }
@@ -90,5 +108,57 @@ usersRouter.route('/accept/:wantedId')
         }
     })
 })
+
+// Unfollow a user
+
+usersRouter.route('/unfollow/:wantedId')
+.put((req, res) => {
+    Users.updateOne(
+        {"_id": req.body.asker},
+        {$pull: {"peopleUserFoll": req.params.wantedId}},
+        (err, resu) => {
+        if(err) res.status(406).send(err)
+        else {
+            Users.updateOne(
+                {"_id": req.params.wantedId},
+                {$pull: {"peopleFollUser": req.body.asker}},
+                (err, resul) => {
+                    if(err) res.status(406).send(err)
+                    else res.status(200).send(resul)
+                }
+                )
+        }
+    })
+})
+
+// Remove a following request
+
+usersRouter.route('/removerequest/:wantedId')
+.put((req, res) => {
+    Users.updateOne(
+        {"_id": req.params.wantedId},
+        {$pull: {"asking": req.body.asker}},
+        (err, resu) => {
+            if(err) res.status(406).send(err)
+            else res.status(200).send(resu)
+        }
+    )
+})
+
+// Update the Account
+
+usersRouter.route('/update/:wantedId')
+.put((req, res) => {
+    Users.findByIdAndUpdate(
+        req.params.wantedId,
+        {$set: req.body},
+        {new: true},
+        (err, resu) => {
+            if(err) res.status(406).send(err)
+            else res.status(200).send(resu)
+        }
+        )
+})
+
 
 export default usersRouter
