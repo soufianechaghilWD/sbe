@@ -1,6 +1,6 @@
 import express from 'express'
 import Posts from '../models/posts.js'
-
+import Users from '../models/users.js'
 
 const postsRouter = express.Router()
 
@@ -12,11 +12,16 @@ postsRouter.route('/')
 
     //add a new Post
     Posts.create(data, (err, result) => {
-        if(err) {
-            console.log(err)
-            res.status(501).send(err)
+        if(err) res.status(501).send(err)
+        else { 
+            Users.updateOne(
+                {"_id": data.poster},
+                {$addToSet: {"posts": [result._id]}}
+                ,(err, resu) => {
+                    if(err) res.status(406).send(err)
+                    else res.status(201).send(resu)
+                })
         }
-        else res.status(201).send(result)
     })
 })
 .get((req, res) => {
@@ -51,6 +56,26 @@ postsRouter.route('/addlike/:postId')
     })
 }) 
 
+// Get the posts for the front page
+
+postsRouter.route('/page')
+.get((req, res) => {
+    Posts.find((err, resu) => {
+        if(err) res.status(400).send(err)
+        else { 
+            Users.findById(req.body.asker, (err, resul) => {
+                if(err) res.status(400).send(err)
+                else{
+                    // Sort the array 
+                    const sendingInfo = resu.sort((a, b) => b.time - a.time)
+                    // Get only posts of people the user follows
+                    res.status(200).send(sendingInfo.map(x => {if (resul.peopleUserFoll.includes(x.poster) === true) return x}).filter(it => it !== undefined))
+                }
+            })
+            
+        }
+    })
+})
 
 
 export default postsRouter

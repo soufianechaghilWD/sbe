@@ -15,7 +15,14 @@ usersRouter.route('/')
         if (err){
             res.status(500).send(err)
         }else{
-            res.status(201).send(response)
+            Users.updateOne(
+                {"_id": response._id},
+                {$addToSet: {"peopleUserFoll": [response._id]}},
+                (err, resul) => {
+                    if(err) res.status(406).send(err)
+                    else res.status(200).send(resul)
+                }
+                )
         }
     })
 })
@@ -32,45 +39,50 @@ usersRouter.route('/')
     })
 })
 
-// Follow a User
+// Follow a User if account private send an ask 
 
 usersRouter.route('/:wantedId')
 .put((req, res) => {
     const data = req.body
-    Users.updateOne(
-        {"_id" : req.params.wantedId},
-        {$addToSet: { peopleFollUser : [data.asker]}},
-        (err, result) => {
-        if(err){
-            res.status(406).send(err)
-        }else{
-            Users.updateOne(
-                {"_id": data.asker},
-                {$addToSet: {peopleUserFoll: [req.params.wantedId]}},
-                (err, results) => {
-                if(err) res.status(406).send(err)
-                else res.status(200).send(results)
-            })
+
+    Users.findById(req.params.wantedId, (err, resu) => {
+        if(err) res.status(406).send(err)
+        else {
+            if(!resu.private){
+                //Follow if account public
+                Users.updateOne(
+                    {"_id" : req.params.wantedId},
+                    {$addToSet: { peopleFollUser : [data.asker]}},
+                    (err, result) => {
+                    if(err){
+                        res.status(406).send(err)
+                    }else{
+                        Users.updateOne(
+                            {"_id": data.asker},
+                            {$addToSet: {peopleUserFoll: [req.params.wantedId]}},
+                            (err, results) => {
+                            if(err) res.status(406).send(err)
+                            else res.status(200).send(results)
+                        })
+                    }
+                })
+            }else{
+                //Send an Ask if the account private
+                Users.updateOne(
+                    {"_id": req.params.wantedId},
+                    {$addToSet: { asking : [req.body.asker]}}, 
+                    (err, results) => {
+                    if (err) res.status(406).send(err)
+                    else res.status(200).send(results)
+                })
+            }
         }
     })
-})
-
-// Ask to follow
-
-usersRouter.route('/ask/:wantedId')
-.put((req, res) => {
-
-    Users.updateOne(
-        {"_id": req.params.wantedId},
-        {$addToSet: { asking : [req.body.asker]}}, 
-        (err, results) => {
-        if (err) res.status(406).send(err)
-        else res.status(200).send(results)
-    })
+    
 })
 
 
-// Accept the Asks for Following
+// Accept the Asks for Following if account private
 
 usersRouter.route('/accept/:wantedId')
 .put((req, res) => {
@@ -160,5 +172,17 @@ usersRouter.route('/update/:wantedId')
         )
 })
 
+// Suggestion for new Users
+
+usersRouter.route('/sugg')
+.get((req, res) => {
+    Users.find((err, resu) => {
+        if(err) res.status(406).send(err)
+        else {
+            // return the first 100 users that are most famous
+            res.status(200).send(resu.sort((a, b) => b.peopleFollUser.length - a.peopleFollUser.length).filter(it => String(it._id) !== req.body.asker).slice(0, 100))
+        }
+    })
+})
 
 export default usersRouter
