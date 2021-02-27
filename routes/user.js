@@ -1,4 +1,5 @@
 import express from 'express'
+import mongoose from 'mongoose'
 
 import Users from '../models/users.js'
 
@@ -19,7 +20,10 @@ usersRouter.route('/')
                 {"_id": response._id},
                 {$addToSet: {"peopleUserFoll": [response._id]}},
                 (err, resul) => {
-                    if(err) res.status(406).send(err)
+                    if(err) {
+                        console.log("this is an err", err)
+                        res.status(406).send(err)
+                    }
                     else res.status(200).send(resul)
                 }
                 )
@@ -174,13 +178,13 @@ usersRouter.route('/update/:wantedId')
 
 // Suggestion for new Users
 
-usersRouter.route('/sugg')
+usersRouter.route('/sugg/:wantedId')
 .get((req, res) => {
     Users.find((err, resu) => {
         if(err) res.status(406).send(err)
         else {
             // return the first 100 users that are most famous
-            res.status(200).send(resu.sort((a, b) => b.peopleFollUser.length - a.peopleFollUser.length).filter(it => String(it._id) !== req.body.asker).slice(0, 100))
+            res.status(200).send(resu.sort((a, b) => b.peopleFollUser.length - a.peopleFollUser.length).filter(it => String(it._id) !== req.params.wantedId).filter(use => use.private === false).slice(0, 100))
         }
     })
 })

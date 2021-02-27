@@ -9,10 +9,13 @@ postsRouter.use(express.json())
 postsRouter.route('/')
 .post((req, res) => {
     const data = req.body
-
+    console.log(data)
     //add a new Post
     Posts.create(data, (err, result) => {
-        if(err) res.status(501).send(err)
+        if(err) {
+            console.log(err)
+            res.status(501).send(err)
+        }
         else { 
             Users.updateOne(
                 {"_id": data.poster},
