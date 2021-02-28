@@ -19,12 +19,13 @@ usersRouter.route('/')
             Users.updateOne(
                 {"_id": response._id},
                 {$addToSet: {"peopleUserFoll": [response._id]}},
+                {new: true},
                 (err, resul) => {
                     if(err) {
                         console.log("this is an err", err)
                         res.status(406).send(err)
                     }
-                    else res.status(200).send(resul)
+                    else res.status(200).send(response)
                 }
                 )
         }
@@ -40,6 +41,21 @@ usersRouter.route('/')
     exec((err, results) => {
         if(err) res.status(400).send(err)
         else res.status(200).send(results)
+    })
+})
+
+
+// Get one User
+
+usersRouter.route('/one/:wantedId')
+.get((req, res) => {
+    Users.findById(req.params.wantedId, (err, resu) => {
+        if (err){
+            res.status(400).send(err)
+        } 
+        else {
+            res.status(200).send(resu)
+        }
     })
 })
 

@@ -9,7 +9,6 @@ postsRouter.use(express.json())
 postsRouter.route('/')
 .post((req, res) => {
     const data = req.body
-    console.log(data)
     //add a new Post
     Posts.create(data, (err, result) => {
         if(err) {
@@ -61,21 +60,32 @@ postsRouter.route('/addlike/:postId')
 
 // Get the posts for the front page
 
-postsRouter.route('/page')
+postsRouter.route('/page/:wantedId')
 .get((req, res) => {
-    Posts.find((err, resu) => {
+
+    //Get all posts
+    Posts.
+    find({}).
+    populate('poster').
+    populate({
+        path: "comments",
+        populate: {
+            path: "commenter",
+            model: "User"
+        }
+    }).
+    exec((err, resu) => {
         if(err) res.status(400).send(err)
-        else { 
-            Users.findById(req.body.asker, (err, resul) => {
+        else {
+            Users.findById(req.params.wantedId, (err, resul) => {
                 if(err) res.status(400).send(err)
                 else{
-                    // Sort the array 
+                    // Sort the array by time
                     const sendingInfo = resu.sort((a, b) => b.time - a.time)
                     // Get only posts of people the user follows
-                    res.status(200).send(sendingInfo.map(x => {if (resul.peopleUserFoll.includes(x.poster) === true) return x}).filter(it => it !== undefined))
+                    res.status(200).send(sendingInfo.map(x => {if (resul.peopleUserFoll.includes(x.poster._id) === true) return x}).filter(it => it !== undefined))
                 }
             })
-            
         }
     })
 })
