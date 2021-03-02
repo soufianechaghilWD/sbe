@@ -49,13 +49,17 @@ usersRouter.route('/')
 
 usersRouter.route('/one/:wantedId')
 .get((req, res) => {
-    Users.findById(req.params.wantedId, (err, resu) => {
-        if (err){
-            res.status(400).send(err)
-        } 
-        else {
-            res.status(200).send(resu)
-        }
+    Users.
+    find({_id: req.params.wantedId}).
+    populate('peopleFollUser').
+    populate('peopleUserFoll').
+    populate("asking").
+    populate("posts").
+    populate("newLikes").    
+    populate("acceptingFrie").    
+    exec((err, results) => {
+        if(err) res.status(400).send(err)
+        else res.status(200).send(results)
     })
 })
 

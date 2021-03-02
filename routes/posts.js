@@ -74,6 +74,7 @@ postsRouter.route('/page/:wantedId')
             model: "User"
         }
     }).
+    populate('likes').
     exec((err, resu) => {
         if(err) res.status(400).send(err)
         else {
