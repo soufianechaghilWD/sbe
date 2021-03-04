@@ -22,10 +22,14 @@ usersRouter.route('/')
                 {new: true},
                 (err, resul) => {
                     if(err) {
-                        console.log("this is an err", err)
                         res.status(406).send(err)
                     }
-                    else res.status(200).send(response)
+                    else {
+                        Users.findById(response._id, (err, ress) => {
+                            if (err) res.status(406).send(err)
+                            else res.status(200).send(ress)
+                        })
+                    }
                 }
                 )
         }
@@ -86,7 +90,12 @@ usersRouter.route('/:wantedId')
                             {$addToSet: {peopleUserFoll: [req.params.wantedId]}},
                             (err, results) => {
                             if(err) res.status(406).send(err)
-                            else res.status(200).send(results)
+                            else {
+                                Users.findById(data.asker, (err, ress) => {
+                                    if(err) res.status(400).send(err)
+                                    else res.status(200).send(ress)
+                                })
+                            }
                         })
                     }
                 })

@@ -54,7 +54,22 @@ postsRouter.route('/addlike/:postId')
         {$addToSet: {"likes": [req.body.liker]}},
         (err, resu) => {
         if(err) res.status(406).send(err)
-        else res.status(200).send(resu)
+        else {
+            Posts.find({_id: req.params.postId}).
+            populate('poster').
+            populate({
+                path: "comments",
+                populate: {
+                    path: "commenter",
+                    model: "User"
+                }
+            }).
+            populate('likes').
+            exec((err, ress) => {
+                if(err) res.status(400).send(err)
+                else res.status(200).send(ress)
+            })
+        }
     })
 }) 
 
