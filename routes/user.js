@@ -106,7 +106,12 @@ usersRouter.route('/:wantedId')
                     {$addToSet: { asking : [req.body.asker]}}, 
                     (err, results) => {
                     if (err) res.status(406).send(err)
-                    else res.status(200).send(results)
+                    else {
+                        Users.findById(data.asker, (err, ress) => {
+                            if(err) res.status(400).send(err)
+                            else res.status(200).send(ress)
+                        })
+                    }
                 })
             }
         }
@@ -213,9 +218,27 @@ usersRouter.route('/sugg/:wantedId')
         if(err) res.status(406).send(err)
         else {
             // return the first 100 users that are most famous
-            res.status(200).send(resu.sort((a, b) => b.peopleFollUser.length - a.peopleFollUser.length).filter(it => String(it._id) !== req.params.wantedId).filter(use => use.private === false).slice(0, 100))
+            Users.findById(req.params.wantedId, (err, resul) => {
+                if(err) res.status(400).send(err)
+                else{
+                    res.status(200)
+                    .send(
+                    resu.sort((a, b) => b.peopleFollUser.length - a.peopleFollUser.length)
+                    .filter(it => String(it._id) !== req.params.wantedId)
+                    .filter(one => resul.peopleUserFoll.includes(one._id) === false)
+                    .slice(0, 100)
+                    )
+                }
+            })
+            
         }
     })
 })
+
+// // Get the Notifications 
+// usersRouter.route('/noti/:wantedId')
+// .get((req, res) => {
+
+// })
 
 export default usersRouter
