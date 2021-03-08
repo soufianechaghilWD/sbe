@@ -91,9 +91,17 @@ usersRouter.route('/:wantedId')
                             (err, results) => {
                             if(err) res.status(406).send(err)
                             else {
-                                Users.findById(data.asker, (err, ress) => {
+                                Users.
+                                find({_id: data.asker}).
+                                populate('peopleFollUser').
+                                populate('peopleUserFoll').
+                                populate("asking").
+                                populate("posts").
+                                populate("newLikes").    
+                                populate("acceptingFrie").    
+                                exec((err, results) => {
                                     if(err) res.status(400).send(err)
-                                    else res.status(200).send(ress)
+                                    else res.status(200).send(results)
                                 })
                             }
                         })
